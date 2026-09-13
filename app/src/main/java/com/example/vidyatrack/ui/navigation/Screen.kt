@@ -18,4 +18,7 @@ sealed class Screen(val route: String) {
     object ClassDetail : Screen("class_detail/{classId}") {
         fun createRoute(classId: Int) = "class_detail/$classId"
     }
+    object Attendance : Screen("attendance/{classId}") {
+        fun createRoute(classId: Int) = "attendance/$classId"
+    }
 }
