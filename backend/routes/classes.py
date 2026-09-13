@@ -1,8 +1,14 @@
 from flask import Blueprint, request, jsonify
 from models import db, Class, Student, Teacher
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 
 classes_bp = Blueprint('classes', __name__)
+
+
+def _require_admin():
+    claims = get_jwt()
+    return claims.get('role') == 'ADMIN'
+
 
 # 1. Get all classes
 @classes_bp.route('', methods=['GET'])
@@ -22,7 +28,10 @@ def get_classes():
 @classes_bp.route('', methods=['POST'])
 @jwt_required()
 def add_class():
-    data = request.get_json() or {}
+    if not _require_admin():
+        return jsonify({"message": "Admin access required"}), 403
+
+    data = request.get_json(silent=True) or {}
     try:
         name = (data.get('name') or '').strip()
         if not name:
@@ -42,8 +51,11 @@ def add_class():
 @classes_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_class(id):
+    if not _require_admin():
+        return jsonify({"message": "Admin access required"}), 403
+
     cls = Class.query.get_or_404(id)
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     if not name:
         return jsonify({"message": "Class name is required"}), 400
@@ -66,6 +78,9 @@ def update_class(id):
 @classes_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_class(id):
+    if not _require_admin():
+        return jsonify({"message": "Admin access required"}), 403
+
     cls = Class.query.get_or_404(id)
     try:
         db.session.delete(cls)
@@ -79,6 +94,9 @@ def delete_class(id):
 @classes_bp.route('/<int:class_id>/students/<int:student_id>', methods=['POST'])
 @jwt_required()
 def assign_student(class_id, student_id):
+    if not _require_admin():
+        return jsonify({"message": "Admin access required"}), 403
+
     cls = Class.query.get_or_404(class_id)
     student = Student.query.get_or_404(student_id)
 
@@ -92,6 +110,9 @@ def assign_student(class_id, student_id):
 @classes_bp.route('/<int:class_id>/teachers/<int:teacher_id>', methods=['POST'])
 @jwt_required()
 def assign_teacher(class_id, teacher_id):
+    if not _require_admin():
+        return jsonify({"message": "Admin access required"}), 403
+
     cls = Class.query.get_or_404(class_id)
     teacher = Teacher.query.get_or_404(teacher_id)
 
