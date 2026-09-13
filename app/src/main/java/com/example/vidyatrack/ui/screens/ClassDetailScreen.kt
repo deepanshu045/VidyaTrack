@@ -19,6 +19,7 @@ import com.example.vidyatrack.ui.viewmodel.ClassDetailViewModel
 @Composable
 fun ClassDetailScreen(
     onNavigateBack: () -> Unit,
+    onViewReports: (Int) -> Unit = {},
     viewModel: ClassDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState
@@ -47,6 +48,7 @@ fun ClassDetailScreen(
                     LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
                         item {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                TextButton(onClick = { onViewReports(state.classInfo.id) }) { Text("Reports") }
                                 TextButton(onClick = { showEditDialog = true }) { Text("Edit") }
                                 TextButton(onClick = { showDeleteDialog = true }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
                             }
