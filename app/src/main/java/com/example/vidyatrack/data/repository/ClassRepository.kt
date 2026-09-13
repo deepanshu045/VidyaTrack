@@ -8,69 +8,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ClassRepository @Inject constructor(
-    private val apiService: ApiService
-) {
-    suspend fun getClasses(): Result<List<ClassResponse>> {
-        return try {
-            val response = apiService.getClasses()
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun addClass(classData: Map<String, String>): Result<Any> {
-        return try {
-            val response = apiService.addClass(classData)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getClass(id: Int): Result<ClassResponse> {
-        return try {
-            val response = apiService.getClass(id)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getClassStudents(id: Int): Result<List<StudentResponse>> {
-        return try {
-            val response = apiService.getClassStudents(id)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getClassTeachers(id: Int): Result<List<TeacherResponse>> {
-        return try {
-            val response = apiService.getClassTeachers(id)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun assignStudentToClass(classId: Int, studentId: Int): Result<Any> {
-        return try {
-            val response = apiService.assignStudentToClass(classId, studentId)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun assignTeacherToClass(classId: Int, teacherId: Int): Result<Any> {
-        return try {
-            val response = apiService.assignTeacherToClass(classId, teacherId)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+class ClassRepository @Inject constructor(private val apiService: ApiService) {
+    suspend fun getClasses(): Result<List<ClassResponse>> = try { Result.success(apiService.getClasses()) } catch (e: Exception) { Result.failure(e) }
+    suspend fun addClass(classData: Map<String, String>): Result<Any> = try { Result.success(apiService.addClass(classData)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun getClass(id: Int): Result<ClassResponse> = try { Result.success(apiService.getClass(id)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun updateClass(id: Int, classData: Map<String, String>): Result<Any> = try { Result.success(apiService.updateClass(id, classData)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun deleteClass(id: Int): Result<Any> = try { Result.success(apiService.deleteClass(id)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun getClassStudents(id: Int): Result<List<StudentResponse>> = try { Result.success(apiService.getClassStudents(id)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun getClassTeachers(id: Int): Result<List<TeacherResponse>> = try { Result.success(apiService.getClassTeachers(id)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun assignStudentToClass(classId: Int, studentId: Int): Result<Any> = try { Result.success(apiService.assignStudentToClass(classId, studentId)) } catch (e: Exception) { Result.failure(e) }
+    suspend fun assignTeacherToClass(classId: Int, teacherId: Int): Result<Any> = try { Result.success(apiService.assignTeacherToClass(classId, teacherId)) } catch (e: Exception) { Result.failure(e) }
 }
