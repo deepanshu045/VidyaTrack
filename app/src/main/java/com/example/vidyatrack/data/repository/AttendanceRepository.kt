@@ -3,6 +3,7 @@ package com.example.vidyatrack.data.repository
 import com.example.vidyatrack.data.remote.ApiService
 import com.example.vidyatrack.data.remote.AttendanceHistoryItem
 import com.example.vidyatrack.data.remote.ClassAttendanceResponse
+import com.example.vidyatrack.data.remote.StudentPerformanceResponse
 import com.example.vidyatrack.data.remote.StudentResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,6 +26,18 @@ class AttendanceRepository @Inject constructor(
 
     suspend fun getHistory(classId: Int): Result<List<AttendanceHistoryItem>> = try {
         Result.success(apiService.getClassAttendanceHistory(classId))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun getPerformance(classId: Int): Result<List<StudentPerformanceResponse>> = try {
+        Result.success(apiService.getClassPerformance(classId))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun getLowAttendance(classId: Int, threshold: Double): Result<List<StudentPerformanceResponse>> = try {
+        Result.success(apiService.getLowAttendance(classId, threshold))
     } catch (e: Exception) {
         Result.failure(e)
     }
