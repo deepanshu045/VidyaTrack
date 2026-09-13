@@ -19,24 +19,19 @@ import com.example.vidyatrack.ui.screens.AttendanceScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Login.route
-    ) {
+    NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
-            LoginScreen(
-                onLoginSuccess = { role ->
-                    if (role == "admin") {
-                        navController.navigate(Screen.AdminDashboard.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Screen.TeacherDashboard.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
+            LoginScreen(onLoginSuccess = { role ->
+                if (role == "admin") {
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                } else {
+                    navController.navigate(Screen.TeacherDashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
-            )
+            })
         }
         composable(Screen.AdminDashboard.route) {
             AdminDashboardScreen(
@@ -64,7 +59,7 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(Screen.Attendance.route) { backStackEntry ->
             val classId = checkNotNull(backStackEntry.arguments?.getString("classId")).toInt()
-            AttendanceScreen(classId = classId)
+            AttendanceScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(Screen.StudentList.route) {
             StudentListScreen(
