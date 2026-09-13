@@ -20,6 +20,7 @@ import com.example.vidyatrack.ui.viewmodel.TeacherDashboardViewModel
 @Composable
 fun TeacherDashboardScreen(
     onLogout: () -> Unit,
+    onMarkAttendance: (Int) -> Unit = {},
     viewModel: TeacherDashboardViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState.value
@@ -60,6 +61,12 @@ fun TeacherDashboardScreen(
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Overall attendance: ${formatPercentage(summary.overall_percentage)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Your Assigned Classes",
@@ -71,7 +78,10 @@ fun TeacherDashboardScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(summary.assigned_classes) { assignedClass ->
-                                ClassItem(assignedClass)
+                                ClassItem(
+                                    assignedClass = assignedClass,
+                                    onMarkAttendance = { onMarkAttendance(assignedClass.id) }
+                                )
                             }
                         }
                     }
@@ -89,31 +99,44 @@ fun TeacherDashboardScreen(
 }
 
 @Composable
-fun ClassItem(assignedClass: AssignedClass) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+fun ClassItem(
+    assignedClass: AssignedClass,
+    onMarkAttendance: () -> Unit = {}
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = assignedClass.name,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "${assignedClass.student_count} Students",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
-                    text = assignedClass.name,
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = "${assignedClass.student_count} Students",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = formatPercentage(assignedClass.attendance_percentage),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
             }
-            Button(onClick = { /* Mark Attendance action placeholder */ }) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onMarkAttendance,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Mark Attendance")
             }
         }
     }
 }
+
+private fun formatPercentage(value: Double): String =
+    String.format(java.util.Locale.US, "%.1f%%", value)
