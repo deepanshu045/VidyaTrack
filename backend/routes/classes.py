@@ -22,10 +22,13 @@ def get_classes():
 @classes_bp.route('', methods=['POST'])
 @jwt_required()
 def add_class():
-    data = request.get_json()
+    data = request.get_json() or {}
     try:
+        name = (data.get('name') or '').strip()
+        if not name:
+            return jsonify({"message": "Class name is required"}), 400
         new_class = Class(
-            name=data['name'],
+            name=name,
             description=data.get('description')
         )
         db.session.add(new_class)
@@ -35,7 +38,44 @@ def add_class():
         db.session.rollback()
         return jsonify({"message": str(e)}), 400
 
-# 3. Assign student to class
+# 3. Update a class
+@classes_bp.route('/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_class(id):
+    cls = Class.query.get_or_404(id)
+    data = request.get_json() or {}
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({"message": "Class name is required"}), 400
+    try:
+        cls.name = name
+        if 'description' in data:
+            cls.description = data.get('description')
+        db.session.commit()
+        return jsonify({
+            "message": "Class updated successfully",
+            "id": cls.id,
+            "name": cls.name,
+            "description": cls.description
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 400
+
+# 4. Delete a class
+@classes_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_class(id):
+    cls = Class.query.get_or_404(id)
+    try:
+        db.session.delete(cls)
+        db.session.commit()
+        return jsonify({"message": "Class deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 400
+
+# 5. Assign student to class
 @classes_bp.route('/<int:class_id>/students/<int:student_id>', methods=['POST'])
 @jwt_required()
 def assign_student(class_id, student_id):
@@ -48,7 +88,7 @@ def assign_student(class_id, student_id):
         return jsonify({"message": "Student assigned to class"}), 200
     return jsonify({"message": "Student already in class"}), 400
 
-# 4. Assign teacher to class
+# 6. Assign teacher to class
 @classes_bp.route('/<int:class_id>/teachers/<int:teacher_id>', methods=['POST'])
 @jwt_required()
 def assign_teacher(class_id, teacher_id):
@@ -61,7 +101,7 @@ def assign_teacher(class_id, teacher_id):
         return jsonify({"message": "Teacher assigned to class"}), 200
     return jsonify({"message": "Teacher already assigned to class"}), 400
 
-# 5. Get students in a class
+# 7. Get students in a class
 @classes_bp.route('/<int:id>/students', methods=['GET'])
 @jwt_required()
 def get_class_students(id):
