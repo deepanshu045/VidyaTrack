@@ -24,158 +24,103 @@ fun ClassDetailScreen(
     val uiState by viewModel.uiState
     val availableStudents by viewModel.availableStudents
     val availableTeachers by viewModel.availableTeachers
-
     var showStudentDialog by remember { mutableStateOf(false) }
     var showTeacherDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var actionMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        when (uiState) {
-                            is ClassDetailUiState.Success -> (uiState as ClassDetailUiState.Success).classInfo.name
-                            else -> "Class Detail"
-                        }
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
+                title = { Text((uiState as? ClassDetailUiState.Success)?.classInfo?.name ?: "Class Detail") },
+                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } }
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+        Box(Modifier.fillMaxSize().padding(padding)) {
             when (uiState) {
-                is ClassDetailUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+                is ClassDetailUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                is ClassDetailUiState.Error -> Text((uiState as ClassDetailUiState.Error).message, color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center))
                 is ClassDetailUiState.Success -> {
-                    val successState = uiState as ClassDetailUiState.Success
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    ) {
+                    val state = uiState as ClassDetailUiState.Success
+                    LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
                         item {
-                            Text(text = "Info", style = MaterialTheme.typography.titleLarge)
-                            Text(text = successState.classInfo.description ?: "No description", style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                TextButton(onClick = { showEditDialog = true }) { Text("Edit") }
+                                TextButton(onClick = { showDeleteDialog = true }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                            }
+                            Text("Info", style = MaterialTheme.typography.titleLarge)
+                            Text(state.classInfo.description ?: "No description", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.height(24.dp))
                         }
-
                         item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Teachers", style = MaterialTheme.typography.titleLarge)
-                                TextButton(onClick = { showTeacherDialog = true }) {
-                                    Icon(Icons.Default.Add, contentDescription = null)
-                                    Text("Assign")
-                                }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Teachers", style = MaterialTheme.typography.titleLarge)
+                                TextButton(onClick = { showTeacherDialog = true }) { Icon(Icons.Default.Add, null); Text("Assign") }
                             }
                         }
-
-                        items(successState.teachers) { teacher ->
-                            Text(text = teacher.fullName, modifier = Modifier.padding(vertical = 4.dp))
-                        }
-
-                        item { Spacer(modifier = Modifier.height(24.dp)) }
-
+                        items(state.teachers) { teacher -> Text(teacher.fullName, Modifier.padding(vertical = 4.dp)) }
+                        item { Spacer(Modifier.height(24.dp)) }
                         item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Students", style = MaterialTheme.typography.titleLarge)
-                                TextButton(onClick = { showStudentDialog = true }) {
-                                    Icon(Icons.Default.Add, contentDescription = null)
-                                    Text("Assign")
-                                }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Students", style = MaterialTheme.typography.titleLarge)
+                                TextButton(onClick = { showStudentDialog = true }) { Icon(Icons.Default.Add, null); Text("Assign") }
                             }
                         }
-
-                        items(successState.students) { student ->
-                            Text(text = student.fullName, modifier = Modifier.padding(vertical = 4.dp))
-                        }
+                        items(state.students) { student -> Text(student.fullName, Modifier.padding(vertical = 4.dp)) }
                     }
-                }
-                is ClassDetailUiState.Error -> {
-                    Text(
-                        text = (uiState as ClassDetailUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
                 }
             }
         }
     }
 
-    if (showStudentDialog) {
-        val enrolledStudentIds = (uiState as? ClassDetailUiState.Success)?.students?.map { it.id } ?: emptyList()
-        val selectableStudents = availableStudents.filter { it.id !in enrolledStudentIds }
-
+    if (showEditDialog) {
+        val current = uiState as? ClassDetailUiState.Success
+        var name by remember(current) { mutableStateOf(current?.classInfo?.name ?: "") }
+        var description by remember(current) { mutableStateOf(current?.classInfo?.description ?: "") }
         AlertDialog(
-            onDismissRequest = { showStudentDialog = false },
-            title = { Text("Assign Student") },
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Class") },
             text = {
-                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
-                    items(selectableStudents) { student ->
-                        TextButton(
-                            onClick = {
-                                viewModel.assignStudent(student.id)
-                                showStudentDialog = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(student.fullName)
-                        }
-                    }
+                Column {
+                    OutlinedTextField(name, { name = it }, label = { Text("Class name") }, singleLine = true)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(description, { description = it }, label = { Text("Description") }, minLines = 3)
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showStudentDialog = false }) {
-                    Text("Close")
-                }
-            }
+                TextButton(onClick = { viewModel.updateClass(name, description) { ok -> actionMessage = if (ok) "Class updated successfully" else "Failed to update class" }; showEditDialog = false }) { Text("Save") }
+            },
+            dismissButton = { TextButton(onClick = { showEditDialog = false }) { Text("Cancel") } }
         )
     }
 
-    if (showTeacherDialog) {
-        val assignedTeacherIds = (uiState as? ClassDetailUiState.Success)?.teachers?.map { it.id } ?: emptyList()
-        val selectableTeachers = availableTeachers.filter { it.id !in assignedTeacherIds }
-
+    if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showTeacherDialog = false },
-            title = { Text("Assign Teacher") },
-            text = {
-                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
-                    items(selectableTeachers) { teacher ->
-                        TextButton(
-                            onClick = {
-                                viewModel.assignTeacher(teacher.id)
-                                showTeacherDialog = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(teacher.fullName)
-                        }
-                    }
-                }
-            },
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Class?") },
+            text = { Text("This will permanently delete the class. Continue?") },
             confirmButton = {
-                TextButton(onClick = { showTeacherDialog = false }) {
-                    Text("Close")
-                }
-            }
+                TextButton(onClick = { viewModel.deleteClass { ok -> if (ok) onNavigateBack() else actionMessage = "Failed to delete class" }; showDeleteDialog = false }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } }
         )
+    }
+
+    if (showStudentDialog) {
+        val ids = (uiState as? ClassDetailUiState.Success)?.students?.map { it.id } ?: emptyList()
+        val selectable = availableStudents.filter { it.id !in ids }
+        AlertDialog(onDismissRequest = { showStudentDialog = false }, title = { Text("Assign Student") }, text = { LazyColumn(Modifier.heightIn(max = 400.dp)) { items(selectable) { student -> TextButton({ viewModel.assignStudent(student.id); showStudentDialog = false }, Modifier.fillMaxWidth()) { Text(student.fullName) } } } }, confirmButton = { TextButton({ showStudentDialog = false }) { Text("Close") } })
+    }
+
+    if (showTeacherDialog) {
+        val ids = (uiState as? ClassDetailUiState.Success)?.teachers?.map { it.id } ?: emptyList()
+        val selectable = availableTeachers.filter { it.id !in ids }
+        AlertDialog(onDismissRequest = { showTeacherDialog = false }, title = { Text("Assign Teacher") }, text = { LazyColumn(Modifier.heightIn(max = 400.dp)) { items(selectable) { teacher -> TextButton({ viewModel.assignTeacher(teacher.id); showTeacherDialog = false }, Modifier.fillMaxWidth()) { Text(teacher.fullName) } } } }, confirmButton = { TextButton({ showTeacherDialog = false }) { Text("Close") } })
+    }
+
+    actionMessage?.let { message ->
+        AlertDialog(onDismissRequest = { actionMessage = null }, title = { Text("Class") }, text = { Text(message) }, confirmButton = { TextButton({ actionMessage = null }) { Text("OK") } })
     }
 }
