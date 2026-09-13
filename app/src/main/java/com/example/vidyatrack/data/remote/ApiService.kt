@@ -27,8 +27,11 @@ interface ApiService {
     @POST("api/attendance") suspend fun markAttendance(@Body data: Map<String, Any?>): Any
     @GET("api/attendance/class/{class_id}/date/{date}") suspend fun getClassAttendance(@Path("class_id") classId: Int, @Path("date") date: String): ClassAttendanceResponse
     @GET("api/attendance/class/{class_id}/history") suspend fun getClassAttendanceHistory(@Path("class_id") classId: Int): List<AttendanceHistoryItem>
+    @GET("api/attendance/class/{class_id}/performance") suspend fun getClassPerformance(@Path("class_id") classId: Int): List<StudentPerformanceResponse>
+    @GET("api/attendance/class/{class_id}/low-attendance") suspend fun getLowAttendance(@Path("class_id") classId: Int, @Query("threshold") threshold: Double = 75.0): List<StudentPerformanceResponse>
 }
 
 data class ClassAttendanceResponse(val session_id: Int?, val records: List<AttendanceRecordResponse>)
 data class AttendanceRecordResponse(val student_id: Int, val student_name: String, val status: String)
-data class AttendanceHistoryItem(val id: Int, val date: String, val present_count: Int, val total_count: Int)
+data class AttendanceHistoryItem(val id: Int, val date: String, val present_count: Int, val total_count: Int, val percentage: Double = 0.0)
+data class StudentPerformanceResponse(val student_id: Int, val student_name: String, val present_count: Int, val absent_count: Int, val total_marked: Int, val total_sessions: Int, val attendance_percentage: Double)
