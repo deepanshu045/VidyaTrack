@@ -1,7 +1,6 @@
 package com.example.vidyatrack.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,11 +15,7 @@ import com.example.vidyatrack.ui.screens.AddTeacherScreen
 import com.example.vidyatrack.ui.screens.ClassListScreen
 import com.example.vidyatrack.ui.screens.AddClassScreen
 import com.example.vidyatrack.ui.screens.ClassDetailScreen
-import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import com.example.vidyatrack.ui.screens.AttendanceScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -50,15 +45,9 @@ fun NavGraph(navController: NavHostController) {
                         popUpTo(Screen.AdminDashboard.route) { inclusive = true }
                     }
                 },
-                onNavigateToStudents = {
-                    navController.navigate(Screen.StudentList.route)
-                },
-                onNavigateToTeachers = {
-                    navController.navigate(Screen.TeacherList.route)
-                },
-                onNavigateToClasses = {
-                    navController.navigate(Screen.ClassList.route)
-                }
+                onNavigateToStudents = { navController.navigate(Screen.StudentList.route) },
+                onNavigateToTeachers = { navController.navigate(Screen.TeacherList.route) },
+                onNavigateToClasses = { navController.navigate(Screen.ClassList.route) }
             )
         }
         composable(Screen.TeacherDashboard.route) {
@@ -67,31 +56,30 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.TeacherDashboard.route) { inclusive = true }
                     }
+                },
+                onMarkAttendance = { classId ->
+                    navController.navigate(Screen.Attendance.createRoute(classId))
                 }
             )
         }
+        composable(Screen.Attendance.route) { backStackEntry ->
+            val classId = checkNotNull(backStackEntry.arguments?.getString("classId")).toInt()
+            AttendanceScreen(classId = classId)
+        }
         composable(Screen.StudentList.route) {
             StudentListScreen(
-                onNavigateToAddEdit = { studentId ->
-                    navController.navigate(Screen.AddEditStudent.createRoute(studentId))
-                },
-                onNavigateToDetail = { studentId ->
-                    navController.navigate(Screen.StudentDetail.createRoute(studentId))
-                }
+                onNavigateToAddEdit = { studentId -> navController.navigate(Screen.AddEditStudent.createRoute(studentId)) },
+                onNavigateToDetail = { studentId -> navController.navigate(Screen.StudentDetail.createRoute(studentId)) }
             )
         }
         composable(Screen.StudentDetail.route) {
             StudentDetailScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToEdit = { studentId ->
-                    navController.navigate(Screen.AddEditStudent.createRoute(studentId))
-                }
+                onNavigateToEdit = { studentId -> navController.navigate(Screen.AddEditStudent.createRoute(studentId)) }
             )
         }
         composable(Screen.AddEditStudent.route) {
-            AddEditStudentScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            AddEditStudentScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(Screen.TeacherList.route) {
             TeacherListScreen(
@@ -100,28 +88,20 @@ fun NavGraph(navController: NavHostController) {
             )
         }
         composable(Screen.AddTeacher.route) {
-            AddTeacherScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            AddTeacherScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(Screen.ClassList.route) {
             ClassListScreen(
                 onNavigateToAdd = { navController.navigate(Screen.AddClass.route) },
-                onNavigateToDetail = { classId ->
-                    navController.navigate(Screen.ClassDetail.createRoute(classId))
-                },
+                onNavigateToDetail = { classId -> navController.navigate(Screen.ClassDetail.createRoute(classId)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(Screen.AddClass.route) {
-            AddClassScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            AddClassScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(Screen.ClassDetail.route) {
-            ClassDetailScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            ClassDetailScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
