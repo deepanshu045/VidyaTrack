@@ -22,15 +22,11 @@ class ClassDetailViewModel @Inject constructor(
     private val teacherRepository: TeacherRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
     private val classId: String = checkNotNull(savedStateHandle["classId"])
-
     private val _uiState = mutableStateOf<ClassDetailUiState>(ClassDetailUiState.Loading)
     val uiState: State<ClassDetailUiState> = _uiState
-
     private val _availableStudents = mutableStateOf<List<StudentResponse>>(emptyList())
     val availableStudents: State<List<StudentResponse>> = _availableStudents
-
     private val _availableTeachers = mutableStateOf<List<TeacherResponse>>(emptyList())
     val availableTeachers: State<List<TeacherResponse>> = _availableTeachers
 
@@ -46,12 +42,9 @@ class ClassDetailViewModel @Inject constructor(
             val classResult = classRepository.getClass(id)
             val studentsResult = classRepository.getClassStudents(id)
             val teachersResult = classRepository.getClassTeachers(id)
-
             if (classResult.isSuccess && studentsResult.isSuccess && teachersResult.isSuccess) {
                 _uiState.value = ClassDetailUiState.Success(
-                    classInfo = classResult.getOrThrow(),
-                    students = studentsResult.getOrThrow(),
-                    teachers = teachersResult.getOrThrow()
+                    classResult.getOrThrow(), studentsResult.getOrThrow(), teachersResult.getOrThrow()
                 )
             } else {
                 _uiState.value = ClassDetailUiState.Error("Failed to load class details")
@@ -68,16 +61,40 @@ class ClassDetailViewModel @Inject constructor(
 
     fun assignStudent(studentId: Int) {
         viewModelScope.launch {
-            classRepository.assignStudentToClass(classId.toInt(), studentId).onSuccess {
-                loadClassDetail()
-            }
+            classRepository.assignStudentToClass(classId.toInt(), studentId).onSuccess { loadClassDetail() }
         }
     }
 
     fun assignTeacher(teacherId: Int) {
         viewModelScope.launch {
-            classRepository.assignTeacherToClass(classId.toInt(), teacherId).onSuccess {
+            classRepository.assignTeacherToClass(classId.toInt(), teacherId).onSuccess { loadClassDetail() }
+        }
+    }
+
+    fun updateClass(name: String, description: String, onDone: (Boolean) -> Unit) {
+        if (name.isBlank()) {
+            onDone(false)
+            return
+        }
+        viewModelScope.launch {
+            classRepository.updateClass(
+                classId.toInt(),
+                mapOf("name" to name.trim(), "description" to description.trim())
+            ).onSuccess {
                 loadClassDetail()
+                onDone(true)
+            }.onFailure {
+                onDone(false)
+            }
+        }
+    }
+
+    fun deleteClass(onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            classRepository.deleteClass(classId.toInt()).onSuccess {
+                onDone(true)
+            }.onFailure {
+                onDone(false)
             }
         }
     }
