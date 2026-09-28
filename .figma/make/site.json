@@ -1,0 +1,14 @@
+{
+  "title": "Vidya Track",
+  "description": "Simple class, student, and attendance tracking for learning organizations.",
+  "icons": {
+    "icon": "/vidya-track.svg"
+  },
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
